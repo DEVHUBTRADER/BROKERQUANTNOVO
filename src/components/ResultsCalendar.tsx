@@ -201,6 +201,7 @@ const ResultsCalendar: React.FC = () => {
 
   const handleQuickEdit = async (month: string, year: number) => {
     try {
+      setError(null);
       const newValue = editValue === '' ? null : parseFloat(editValue);
       
       if (editValue !== '' && (isNaN(newValue!) || !isFinite(newValue!))) {
@@ -211,7 +212,6 @@ const ResultsCalendar: React.FC = () => {
       await handleUpdateMonth(month, year, calendarAsset, newValue);
       setEditingMonth(null);
       setEditValue('');
-      setError(null);
     } catch (error) {
       console.error('Erro ao editar valor:', error);
       setError('Erro ao salvar alteração');
@@ -407,31 +407,36 @@ const ResultsCalendar: React.FC = () => {
                         }
                       }}
                     >
-                      {/* Botão de edição rápida para valores existentes */}
+                      {/* Botão de edição para valores existentes */}
                       {isAdmin && hasData && editingMonth !== `${month}-${calendarYear}` && (
+                        <div className="group">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingMonth(`${month}-${calendarYear}`);
+                              setEditValue(value?.toString() || '');
+                            }}
+                            className="absolute top-2 right-2 p-1 bg-slate-700/80 hover:bg-slate-600 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                            title="Editar valor"
+                          >
+                            <Edit3 className="h-3 w-3 text-slate-300" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Botão de adicionar para meses sem dados */}
+                      {isAdmin && !hasData && editingMonth !== `${month}-${calendarYear}` && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditingMonth(`${month}-${calendarYear}`);
-                            setEditValue(value?.toString() || '');
+                            setEditValue('');
                           }}
-                          className="absolute top-2 right-2 p-1 bg-slate-700/80 hover:bg-slate-600 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                          title="Editar valor"
+                          className="absolute top-2 right-2 p-1 bg-green-600/80 hover:bg-green-500 rounded-full transition-colors"
+                          title="Adicionar valor"
                         >
-                          <Edit3 className="h-3 w-3 text-slate-300" />
+                          <Plus className="h-3 w-3 text-white" />
                         </button>
-                      )}
-
-                      {/* Botão de adicionar para meses sem dados */}
-                      {isAdmin && !hasData && (
-                        <AdminEditButton
-                          isAdmin={isAdmin}
-                          month={month}
-                          year={calendarYear}
-                          asset={calendarAsset}
-                          currentValue={value}
-                          onUpdate={handleUpdateMonth}
-                        />
                       )}
                       
                       <div className="text-center">
@@ -445,13 +450,16 @@ const ResultsCalendar: React.FC = () => {
                               step="0.1"
                               value={editValue}
                               onChange={(e) => setEditValue(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-700 border border-slate-500 rounded-lg text-white text-center focus:border-blue-500 focus:outline-none"
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-500 rounded-lg text-white text-center focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                               placeholder="0.0"
                               autoFocus
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
                                   handleQuickEdit(month, calendarYear);
-                                } else if (e.key === 'Escape') {
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
                                   setEditingMonth(null);
                                   setEditValue('');
                                 }
@@ -460,22 +468,28 @@ const ResultsCalendar: React.FC = () => {
                             <div className="flex gap-2 justify-center">
                               <button
                                 onClick={() => handleQuickEdit(month, calendarYear)}
-                                className="p-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm font-medium"
                                 title="Salvar"
                               >
-                                <Check className="h-4 w-4 text-white" />
+                                Salvar
                               </button>
                               <button
                                 onClick={() => {
                                   setEditingMonth(null);
                                   setEditValue('');
+                                  setError(null);
                                 }}
-                                className="p-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors text-sm font-medium"
                                 title="Cancelar"
                               >
-                                <X className="h-4 w-4 text-white" />
+                                Cancelar
                               </button>
                             </div>
+                            {error && (
+                              <div className="text-red-400 text-xs text-center mt-2">
+                                {error}
+                              </div>
+                            )}
                           </div>
                         ) : value !== null ? (
                           <div className="group">
@@ -491,8 +505,13 @@ const ResultsCalendar: React.FC = () => {
                             )}
                           </div>
                         ) : (
-                          <div className="text-gray-500 text-lg">
-                            Sem dados
+                          <div className="text-gray-500 text-lg group">
+                            <div>Sem dados</div>
+                            {isAdmin && (
+                              <div className="text-xs text-slate-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Clique no + para adicionar
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
