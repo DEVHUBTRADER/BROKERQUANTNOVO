@@ -401,31 +401,123 @@ const ResultsCalendar: React.FC = () => {
                           : 'bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-500/30'
                       }`}
                       onClick={() => {
-                        if (isAdmin && hasData) {
+                        if (isAdmin && hasData && editingMonth !== `${month}-${calendarYear}`) {
                           setEditingMonth(`${month}-${calendarYear}`);
                           setEditValue(value?.toString() || '');
                         }
                       }}
                     >
-                      {/* Botão de edição para valores existentes */}
-                      {isAdmin && hasData && editingMonth !== `${month}-${calendarYear}` && (
-                        <div className="group">
+                      {/* Botões de ação para admin */}
+                      {isAdmin && editingMonth !== `${month}-${calendarYear}` && (
+                        hasData ? (
+                          /* Botão de edição para valores existentes */
+                          <div className="group">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingMonth(`${month}-${calendarYear}`);
+                                setEditValue(value?.toString() || '');
+                              }}
+                              className="absolute top-2 right-2 p-1 bg-slate-700/80 hover:bg-slate-600 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                              title="Editar valor"
+                            >
+                              <Edit3 className="h-3 w-3 text-slate-300" />
+                            </button>
+                          </div>
+                        ) : (
+                          /* Botão de adicionar para meses sem dados */
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingMonth(`${month}-${calendarYear}`);
-                              setEditValue(value?.toString() || '');
+                              setEditValue('');
                             }}
-                            className="absolute top-2 right-2 p-1 bg-slate-700/80 hover:bg-slate-600 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                            title="Editar valor"
+                            className="absolute top-2 right-2 p-1.5 bg-green-600/80 hover:bg-green-500 rounded-full transition-colors shadow-lg"
+                            title="Adicionar valor"
                           >
-                            <Edit3 className="h-3 w-3 text-slate-300" />
+                            <Plus className="h-4 w-4 text-white" />
                           </button>
-                        </div>
+                        )
                       )}
-
-                      {/* Botão de adicionar para meses sem dados */}
-                      {isAdmin && !hasData && editingMonth !== `${month}-${calendarYear}` && (
+                      
+                      <div className="text-center">
+                        <h3 className="text-lg font-semibold mb-1">{month}</h3>
+                        <p className="text-sm text-gray-400 mb-3">{calendarYear}</p>
+                        
+                        {editingMonth === `${month}-${calendarYear}` ? (
+                          <div className="space-y-3">
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-500 rounded-lg text-white text-center focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                              placeholder="0.0"
+                              autoFocus
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleQuickEdit(month, calendarYear);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  setEditingMonth(null);
+                                  setEditValue('');
+                                  setError(null);
+                                }
+                              }}
+                            />
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => handleQuickEdit(month, calendarYear)}
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm font-medium"
+                                title="Salvar"
+                              >
+                                Salvar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingMonth(null);
+                                  setEditValue('');
+                                  setError(null);
+                                }}
+                                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors text-sm font-medium"
+                                title="Cancelar"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                            {error && (
+                              <div className="text-red-400 text-xs text-center mt-2">
+                                {error}
+                              </div>
+                            )}
+                          </div>
+                        ) : hasData ? (
+                          <div className="group">
+                            <div className={`text-2xl font-bold transition-colors ${
+                              value >= 0 ? 'text-green-400' : 'text-red-400'
+                            } ${isAdmin ? 'group-hover:text-blue-400' : ''}`}>
+                              {value >= 0 ? '+' : ''}{value.toFixed(1)}%
+                            </div>
+                            {isAdmin && (
+                              <div className="text-xs text-slate-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Clique para editar
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-gray-500 text-lg group">
+                            <div>Sem dados</div>
+                            {isAdmin && (
+                              <div className="text-xs text-slate-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Clique no + para adicionar
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
