@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, TrendingUp, TrendingDown, BarChart3, Filter, MessageCircle, Plus, AlertCircle } from 'lucide-react';
+import { Calendar, TrendingUp, TrendingDown, BarChart3, Filter, MessageCircle, Plus, AlertCircle, Edit3, Save, X, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ResultsChart from './ResultsChart';
 import AdminEditButton from './AdminEditButton';
@@ -199,6 +199,25 @@ const ResultsCalendar: React.FC = () => {
     }
   };
 
+  const handleQuickEdit = async (month: string, year: number) => {
+    try {
+      const newValue = editValue === '' ? null : parseFloat(editValue);
+      
+      if (editValue !== '' && (isNaN(newValue!) || !isFinite(newValue!))) {
+        setError('Valor inválido. Use números decimais (ex: 12.5)');
+        return;
+      }
+
+      await handleUpdateMonth(month, year, calendarAsset, newValue);
+      setEditingMonth(null);
+      setEditValue('');
+      setError(null);
+    } catch (error) {
+      console.error('Erro ao editar valor:', error);
+      setError('Erro ao salvar alteração');
+    }
+  };
+
   // Effects
   useEffect(() => {
     checkAdminStatus();
@@ -367,20 +386,46 @@ const ResultsCalendar: React.FC = () => {
                 {months.map((month) => {
                   const monthData = calendarData.find(d => d.month === month);
                   const value = monthData ? getAssetValue(monthData, calendarAsset) : null;
+                  const hasData = value !== null;
                   
                   return (
                     <div
                       key={month}
-                      className={`relative p-6 rounded-xl border transition-all duration-200 hover:scale-105 ${
+                      className={`relative p-6 rounded-xl border transition-all duration-200 ${
+                        hasData && isAdmin ? 'hover:scale-105 cursor-pointer' : hasData ? 'hover:scale-105' : ''
+                      } ${
                         value === null
                           ? 'bg-slate-800/50 border-slate-600'
                           : value >= 0
                           ? 'bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-500/30'
                           : 'bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-500/30'
                       }`}
+                      onClick={() => {
+                        if (isAdmin && hasData) {
+                          setEditingMonth(`${month}-${calendarYear}`);
+                          setEditValue(value?.toString() || '');
+                        }
+                      }}
                     >
-                      {isAdmin && (
+                      {/* Botão de edição rápida para valores existentes */}
+                      {isAdmin && hasData && editingMonth !== `${month}-${calendarYear}` && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingMonth(`${month}-${calendarYear}`);
+                            setEditValue(value?.toString() || '');
+                          }}
+                          className="absolute top-2 right-2 p-1 bg-slate-700/80 hover:bg-slate-600 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                          title="Editar valor"
+                        >
+                          <Edit3 className="h-3 w-3 text-slate-300" />
+                        </button>
+                      )}
+
+                      {/* Botão de adicionar para meses sem dados */}
+                      {isAdmin && !hasData && (
                         <AdminEditButton
+                          isAdmin={isAdmin}
                           month={month}
                           year={calendarYear}
                           asset={calendarAsset}
@@ -393,11 +438,57 @@ const ResultsCalendar: React.FC = () => {
                         <h3 className="text-lg font-semibold mb-1">{month}</h3>
                         <p className="text-sm text-gray-400 mb-3">{calendarYear}</p>
                         
-                        {value !== null ? (
-                          <div className={`text-2xl font-bold ${
-                            value >= 0 ? 'text-green-400' : 'text-red-400'
-                          }`}>
-                            {value >= 0 ? '+' : ''}{value.toFixed(1)}%
+                        {editingMonth === `${month}-${calendarYear}` ? (
+                          <div className="space-y-3">
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-500 rounded-lg text-white text-center focus:border-blue-500 focus:outline-none"
+                              placeholder="0.0"
+                              autoFocus
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleQuickEdit(month, calendarYear);
+                                } else if (e.key === 'Escape') {
+                                  setEditingMonth(null);
+                                  setEditValue('');
+                                }
+                              }}
+                            />
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => handleQuickEdit(month, calendarYear)}
+                                className="p-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                                title="Salvar"
+                              >
+                                <Check className="h-4 w-4 text-white" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingMonth(null);
+                                  setEditValue('');
+                                }}
+                                className="p-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                                title="Cancelar"
+                              >
+                                <X className="h-4 w-4 text-white" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : value !== null ? (
+                          <div className="group">
+                            <div className={`text-2xl font-bold transition-colors ${
+                              value >= 0 ? 'text-green-400' : 'text-red-400'
+                            } ${isAdmin ? 'group-hover:text-blue-400' : ''}`}>
+                              {value >= 0 ? '+' : ''}{value.toFixed(1)}%
+                            </div>
+                            {isAdmin && (
+                              <div className="text-xs text-slate-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Clique para editar
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="text-gray-500 text-lg">
