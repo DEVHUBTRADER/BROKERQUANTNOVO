@@ -20,6 +20,9 @@ interface ResultsChartProps {
 const ResultsChart: React.FC<ResultsChartProps> = ({ data, asset, year }) => {
   const [chartType, setChartType] = React.useState<'line' | 'bar'>('line');
 
+  // Check if we're in production mode (no data)
+  const isProductionMode = data.length === 0;
+
   // Filter and prepare data for the chart
   const chartData = data
     .filter(d => d.year === year)
@@ -131,94 +134,112 @@ const ResultsChart: React.FC<ResultsChartProps> = ({ data, asset, year }) => {
         </div>
       </div>
 
-      <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === 'line' ? (
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis 
-                dataKey="month" 
-                stroke="#64748b"
-                fontSize={12}
-              />
-              <YAxis 
-                stroke="#64748b"
-                fontSize={12}
-                tickFormatter={formatYAxis}
-                domain={['dataMin', 'dataMax']}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey="cumulativeValue" 
-                stroke={assetColors[asset]}
-                strokeWidth={6}
-                dot={{ fill: assetColors[asset], strokeWidth: 2, r: 6 }}
-                activeDot={{ r: 8, stroke: assetColors[asset], strokeWidth: 2 }}
-                connectNulls={false}
-              />
-              {/* Zero line */}
-              <Line 
-                type="monotone" 
-                dataKey={() => 0} 
-                stroke="#e2e8f0" 
-                strokeWidth={1}
-                strokeDasharray="5 5"
-                dot={false}
-                activeDot={false}
-              />
-            </LineChart>
-          ) : (
-            <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis 
-                dataKey="month" 
-                stroke="#64748b"
-                fontSize={12}
-              />
-              <YAxis 
-                stroke="#64748b"
-                fontSize={12}
-                tickFormatter={formatYAxis}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar 
-                dataKey="monthlyValue" 
-                fill={assetColors[asset]}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          )}
-        </ResponsiveContainer>
-      </div>
+      {isProductionMode ? (
+        <div className="h-80 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <TrendingUp className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Aguardando Dados de Produção
+            </h3>
+            <p className="text-gray-600">
+              O gráfico será exibido quando os primeiros resultados forem inseridos
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === 'line' ? (
+              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="#64748b"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickFormatter={formatYAxis}
+                  domain={['dataMin', 'dataMax']}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Line 
+                  type="monotone" 
+                  dataKey="cumulativeValue" 
+                  stroke={assetColors[asset]}
+                  strokeWidth={6}
+                  dot={{ fill: assetColors[asset], strokeWidth: 2, r: 6 }}
+                  activeDot={{ r: 8, stroke: assetColors[asset], strokeWidth: 2 }}
+                  connectNulls={false}
+                />
+                {/* Zero line */}
+                <Line 
+                  type="monotone" 
+                  dataKey={() => 0} 
+                  stroke="#e2e8f0" 
+                  strokeWidth={1}
+                  strokeDasharray="5 5"
+                  dot={false}
+                  activeDot={false}
+                />
+              </LineChart>
+            ) : (
+              <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="#64748b"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickFormatter={formatYAxis}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar 
+                  dataKey="monthlyValue" 
+                  fill={assetColors[asset]}
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Chart Summary */}
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="text-center">
-          <div className="text-lg font-bold text-green-600">
-            {chartData.filter(d => d.monthlyValue > 0).length}
+      {!isProductionMode && (
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-lg font-bold text-green-600">
+              {chartData.filter(d => d.monthlyValue > 0).length}
+            </div>
+            <div className="text-sm text-gray-600">Meses Positivos</div>
           </div>
-          <div className="text-sm text-gray-600">Meses Positivos</div>
-        </div>
-        <div className="text-center">
-          <div className="text-lg font-bold text-red-600">
-            {chartData.filter(d => d.monthlyValue < 0).length}
+          <div className="text-center">
+            <div className="text-lg font-bold text-red-600">
+              {chartData.filter(d => d.monthlyValue < 0).length}
+            </div>
+            <div className="text-sm text-gray-600">Meses Negativos</div>
           </div>
-          <div className="text-sm text-gray-600">Meses Negativos</div>
-        </div>
-        <div className="text-center">
-          <div className="text-lg font-bold text-blue-600">
-            {chartData.length > 0 ? (chartData.reduce((acc, d) => acc + d.monthlyValue, 0) / chartData.length).toFixed(1) : 0}%
+          <div className="text-center">
+            <div className="text-lg font-bold text-blue-600">
+              {chartData.length > 0 ? (chartData.reduce((acc, d) => acc + d.monthlyValue, 0) / chartData.length).toFixed(1) : 0}%
+            </div>
+            <div className="text-sm text-gray-600">Média Mensal</div>
           </div>
-          <div className="text-sm text-gray-600">Média Mensal</div>
-        </div>
-        <div className="text-center">
-          <div className="text-lg font-bold text-purple-600">
-            {chartData.length > 0 ? chartData[chartData.length - 1].cumulativeValue.toFixed(1) : 0}%
+          <div className="text-center">
+            <div className="text-lg font-bold text-purple-600">
+              {chartData.length > 0 ? chartData[chartData.length - 1].cumulativeValue.toFixed(1) : 0}%
+            </div>
+            <div className="text-sm text-gray-600">Total Acumulado</div>
           </div>
-          <div className="text-sm text-gray-600">Total Acumulado</div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

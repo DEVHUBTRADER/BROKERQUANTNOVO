@@ -61,6 +61,9 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   });
   const [editingMetrics, setEditingMetrics] = useState<TradingMetrics>(metrics);
 
+  // Check if we're in production mode
+  const isProductionMode = data.length === 0;
+
   // Atualizar ano selecionado quando anos disponíveis mudarem
   useEffect(() => {
     if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
@@ -472,62 +475,83 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
         </div>
       )}
 
-      {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {statisticsCards.map((stat, index) => (
-          <div key={index} className={`bg-slate-900/50 rounded-xl p-4 border border-slate-700 hover:border-slate-600 transition-colors ${isEditing ? 'ring-2 ring-blue-500/30' : ''}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center">
-                <stat.icon className="w-5 h-5 text-slate-300" />
-              </div>
-              {isEditing ? (
-                <input
-                  type="number"
-                  step="0.01"
-                  value={editingMetrics[stat.key] || ''}
-                  onChange={(e) => handleMetricChange(stat.key, e.target.value)}
-                  className="w-24 px-2 py-1 text-sm bg-slate-700 border border-slate-500 rounded text-white text-right focus:border-blue-500 focus:outline-none"
-                  disabled={loading}
-                />
-              ) : (
-                <div className={`text-2xl font-bold ${stat.color}`}>
-                  {stat.value}
-                </div>
-              )}
-            </div>
-            <h4 className="text-white font-semibold mb-1">{stat.title}</h4>
-            <p className="text-slate-400 text-sm mb-2">{stat.description}</p>
-            <div className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">
-              {stat.benchmark}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Seção de Resumo */}
-      <div className="bg-slate-900/30 rounded-xl p-4 border border-slate-700">
-        <h4 className="text-lg font-semibold text-white mb-3">Resumo da Performance</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-slate-400">Retorno Total:</span>
-            <span className={`ml-2 font-semibold ${metrics.totalReturn >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {metrics.totalReturn >= 0 ? '+' : ''}{formatNumber(metrics.totalReturn)}%
-            </span>
-          </div>
-          <div>
-            <span className="text-slate-400">Volatilidade:</span>
-            <span className="ml-2 font-semibold text-yellow-400">
-              {formatNumber(metrics.volatility)}%
-            </span>
-          </div>
-          <div>
-            <span className="text-slate-400">Meses Analisados:</span>
-            <span className="ml-2 font-semibold text-blue-400">
-              {data.filter(d => d.year === selectedYear && getAssetValue(d, asset) !== null).length}
-            </span>
+      {isProductionMode ? (
+        <div className="text-center py-12">
+          <div className="bg-slate-900/50 rounded-xl p-8 border border-slate-700">
+            <BarChart3 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+            <h4 className="text-xl font-semibold text-white mb-4">
+              Estatísticas em Modo de Produção
+            </h4>
+            <p className="text-slate-300 mb-6">
+              As estatísticas avançadas serão calculadas automaticamente quando os primeiros resultados forem inseridos.
+            </p>
+            {isAdmin && (
+              <p className="text-slate-400 text-sm">
+                Como administrador, você pode inserir dados manualmente através do calendário de resultados.
+              </p>
+            )}
           </div>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Cards de Estatísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {statisticsCards.map((stat, index) => (
+              <div key={index} className={`bg-slate-900/50 rounded-xl p-4 border border-slate-700 hover:border-slate-600 transition-colors ${isEditing ? 'ring-2 ring-blue-500/30' : ''}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center">
+                    <stat.icon className="w-5 h-5 text-slate-300" />
+                  </div>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingMetrics[stat.key] || ''}
+                      onChange={(e) => handleMetricChange(stat.key, e.target.value)}
+                      className="w-24 px-2 py-1 text-sm bg-slate-700 border border-slate-500 rounded text-white text-right focus:border-blue-500 focus:outline-none"
+                      disabled={loading}
+                    />
+                  ) : (
+                    <div className={`text-2xl font-bold ${stat.color}`}>
+                      {stat.value}
+                    </div>
+                  )}
+                </div>
+                <h4 className="text-white font-semibold mb-1">{stat.title}</h4>
+                <p className="text-slate-400 text-sm mb-2">{stat.description}</p>
+                <div className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">
+                  {stat.benchmark}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Seção de Resumo */}
+          <div className="bg-slate-900/30 rounded-xl p-4 border border-slate-700">
+            <h4 className="text-lg font-semibold text-white mb-3">Resumo da Performance</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-slate-400">Retorno Total:</span>
+                <span className={`ml-2 font-semibold ${metrics.totalReturn >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {metrics.totalReturn >= 0 ? '+' : ''}{formatNumber(metrics.totalReturn)}%
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400">Volatilidade:</span>
+                <span className="ml-2 font-semibold text-yellow-400">
+                  {formatNumber(metrics.volatility)}%
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400">Meses Analisados:</span>
+                <span className="ml-2 font-semibold text-blue-400">
+                  {data.filter(d => d.year === selectedYear && getAssetValue(d, asset) !== null).length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

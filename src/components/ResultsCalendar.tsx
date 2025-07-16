@@ -205,6 +205,8 @@ const ResultsCalendar: React.FC = () => {
     fetchResults();
   }, []);
 
+  // Show empty state message for production
+  const isProductionMode = monthlyData.length === 0;
   // Update available years when data changes
   useEffect(() => {
     if (monthlyData.length > 0) {
@@ -335,6 +337,27 @@ const ResultsCalendar: React.FC = () => {
               <div className="flex items-center gap-2 text-red-400">
                 <AlertCircle className="w-5 h-5" />
                 <span>{error}</span>
+              </div>
+            </div>
+          ) : isProductionMode ? (
+            <div className="text-center py-12">
+              <div className="bg-slate-800/50 rounded-xl p-8 border border-slate-600">
+                <h3 className="text-xl font-semibold text-white mb-4">
+                  Sistema em Modo de Produção
+                </h3>
+                <p className="text-slate-300 mb-6">
+                  Os dados foram zerados para início da operação real. 
+                  {isAdmin ? ' Use o botão "Adicionar Mês" para inserir os primeiros resultados.' : ' Os resultados aparecerão aqui conforme forem sendo inseridos.'}
+                </p>
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Adicionar Primeiro Resultado
+                  </button>
+                )}
               </div>
             </div>
           ) : (
