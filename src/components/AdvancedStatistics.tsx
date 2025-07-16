@@ -370,7 +370,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
       title: 'Perda Média Diária',
       key: 'avgDailyLoss' as keyof TradingMetrics,
       value: `${formatNumber(metrics.avgDailyLoss)}%`,
-      description: 'Média das perdas diárias',
+      description: 'Média da perda mensal',
       icon: TrendingDown,
       color: getMetricColor(metrics.avgDailyLoss, metrics.avgDailyLoss < 2),
       benchmark: '< 2% (Bom)'
