@@ -379,7 +379,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
       title: 'Taxa de Acerto',
       key: 'dailyWinRate' as keyof TradingMetrics,
       value: `${formatNumber(metrics.dailyWinRate)}%`,
-      description: 'Percentual de operações positivas',
+      description: 'Percentual de meses positivos',
       icon: Award,
       color: getMetricColor(metrics.dailyWinRate, metrics.dailyWinRate > 50),
       benchmark: '> 50% (Bom)'
