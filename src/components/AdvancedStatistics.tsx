@@ -358,16 +358,16 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
       benchmark: '> 1.0 (Bom)'
     },
     {
-      title: 'Ganho Médio Diário',
+      title: 'Ganho Médio Mensal',
       key: 'avgDailyGain' as keyof TradingMetrics,
       value: `${formatNumber(metrics.avgDailyGain)}%`,
-      description: 'Média dos ganhos diários',
+      description: 'Média dos ganhos mensais',
       icon: TrendingUp,
       color: getMetricColor(metrics.avgDailyGain, metrics.avgDailyGain > 0),
       benchmark: 'Positivo (Bom)'
     },
     {
-      title: 'Perda Média Diária',
+      title: 'Perda Média Mensal',
       key: 'avgDailyLoss' as keyof TradingMetrics,
       value: `${formatNumber(metrics.avgDailyLoss)}%`,
       description: 'Média da perda mensal',
